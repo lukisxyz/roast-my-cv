@@ -1,5 +1,61 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  globalThis.DOMMatrix = class DOMMatrix {
+    a = 1; b = 0; c = 0; d = 1;
+    e = 0; f = 0;
+    m11 = 1; m12 = 0; m13 = 0; m14 = 0;
+    m21 = 0; m22 = 1; m23 = 0; m24 = 0;
+    m31 = 0; m32 = 0; m33 = 1; m34 = 0;
+    m41 = 0; m42 = 0; m43 = 0; m44 = 1;
+    is2D = true;
+
+    constructor(init?: string | number[]) {
+      if (init) {
+        if (typeof init === 'string') {
+          const parts = init.match(/matrix\((.*)\)/);
+          if (parts) {
+            const values = parts[1].split(',').map(Number);
+            [this.a, this.b, this.c, this.d, this.e, this.f] = values;
+          }
+        } else if (Array.isArray(init)) {
+          [this.m11, this.m12, this.m13, this.m14,
+           this.m21, this.m22, this.m23, this.m24,
+           this.m31, this.m32, this.m33, this.m34,
+           this.m41, this.m42, this.m43, this.m44] = init;
+        }
+      }
+    }
+
+    multiply(other: DOMMatrix): DOMMatrix {
+      const result = new DOMMatrix();
+      result.m11 = this.m11 * other.m11 + this.m12 * other.m21 + this.m13 * other.m31 + this.m14 * other.m41;
+      result.m12 = this.m11 * other.m12 + this.m12 * other.m22 + this.m13 * other.m32 + this.m14 * other.m42;
+      result.m21 = this.m21 * other.m11 + this.m22 * other.m21 + this.m23 * other.m31 + this.m24 * other.m41;
+      result.m22 = this.m21 * other.m12 + this.m22 * other.m22 + this.m23 * other.m32 + this.m24 * other.m42;
+      return result;
+    }
+
+    translate(x: number, y: number, z = 0): DOMMatrix {
+      const result = new DOMMatrix();
+      result.m11 = this.m11; result.m12 = this.m12;
+      result.m21 = this.m21; result.m22 = this.m22;
+      result.m41 = this.m41 + x;
+      result.m42 = this.m42 + y;
+      return result;
+    }
+
+    scale(scaleX: number, scaleY: number): DOMMatrix {
+      const result = new DOMMatrix();
+      result.m11 = this.m11 * scaleX;
+      result.m12 = this.m12 * scaleX;
+      result.m21 = this.m21 * scaleY;
+      result.m22 = this.m22 * scaleY;
+      return result;
+    }
+  } as any;
+}
+
 export const Route = createFileRoute('/api/review-cv')({
   server: {
     handlers: {
@@ -15,7 +71,6 @@ export const Route = createFileRoute('/api/review-cv')({
             )
           }
 
-          // Validate file type
           if (file.type !== 'application/pdf') {
             return Response.json(
               { error: 'Only PDF files are accepted' },
@@ -23,19 +78,25 @@ export const Route = createFileRoute('/api/review-cv')({
             )
           }
 
-          // Read file as buffer
           const arrayBuffer = await file.arrayBuffer()
-          const buffer = Buffer.from(arrayBuffer)
 
-          // Dynamic import to avoid SSR issues with pdf-parse's dependency on pdfjs-dist
-          const { PDFParse } = await import('pdf-parse')
+          const pdfjs = await import('pdfjs-dist/legacy/build/pdf.min.mjs')
+          await import('pdfjs-dist/legacy/build/pdf.worker.min.mjs')
 
-          // Parse PDF
-          const parser = new PDFParse({ data: buffer })
-          const result = await parser.getText()
-          const extractedText = result.text
+          const loadingTask = pdfjs.getDocument({ data: arrayBuffer })
+          const pdfDocument = await loadingTask.promise
 
-          await parser.destroy()
+          const extractedTextParts: string[] = []
+          for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+            const page = await pdfDocument.getPage(pageNum)
+            const textContent = await page.getTextContent()
+            const pageText = textContent.items
+              .map((item: any) => item.str)
+              .join(' ')
+            extractedTextParts.push(pageText)
+          }
+
+          const extractedText = extractedTextParts.join('\n')
 
           if (!extractedText || extractedText.trim().length === 0) {
             return Response.json(
@@ -44,13 +105,11 @@ export const Route = createFileRoute('/api/review-cv')({
             )
           }
 
-          // Truncate text if too long (AI has token limits)
           const maxChars = 8000
           const truncatedText = extractedText.length > maxChars
             ? extractedText.substring(0, maxChars) + '...'
             : extractedText
 
-          // Generate CV review using OpenRouter API directly
           const openRouterApiKey = process.env.OPENROUTER_API_KEY
 
           if (!openRouterApiKey) {
@@ -111,8 +170,6 @@ Provide your review in this JSON format:
           })
 
           if (!aiResponse.ok) {
-            const errorData = await aiResponse.json()
-            console.error('OpenRouter error:', errorData)
             return Response.json(
               { error: 'AI analysis failed' },
               { status: 500 }
@@ -151,9 +208,9 @@ Provide your review in this JSON format:
           })
 
         } catch (error) {
-          console.error('CV review error:', error)
+          const errorMessage = error instanceof Error ? error.message : String(error)
           return Response.json(
-            { error: 'Failed to process CV' },
+            { error: 'Failed to process CV', details: errorMessage },
             { status: 500 }
           )
         }

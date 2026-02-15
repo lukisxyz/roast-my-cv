@@ -45,11 +45,9 @@ function ReviewPage() {
     }
   }, [id])
 
-  // Load PDF from session storage
   useEffect(() => {
     const pdfData = sessionStorage.getItem('uploaded-pdf')
     if (pdfData) {
-      // Convert base64 to binary
       const binaryString = atob(pdfData)
       const bytes = new Uint8Array(binaryString.length)
       for (let i = 0; i < binaryString.length; i++) {
@@ -59,7 +57,6 @@ function ReviewPage() {
       const url = URL.createObjectURL(blob)
       setPdfUrl(url)
 
-      // Cleanup
       return () => URL.revokeObjectURL(url)
     }
   }, [])

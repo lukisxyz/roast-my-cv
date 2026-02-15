@@ -25,10 +25,8 @@ async function uploadCV(file: File): Promise<{ reviewId: string; filename: strin
 
   const data = await response.json()
 
-  // Generate UUID
   const reviewId = crypto.randomUUID()
 
-  // Save to localStorage
   const reviewData = {
     id: reviewId,
     filename: data.filename,
@@ -52,11 +50,10 @@ function HomePage() {
         navigate({ to: '/cv-review/$id', params: { id: data.reviewId } })
       }, 1500)
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to upload CV', {
         description: 'Please try again with a valid PDF file.',
       })
-      console.error('Upload error:', error)
     },
   })
 
@@ -67,21 +64,16 @@ function HomePage() {
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (file) {
-        console.log('Selected file:', file.name)
-
-        // Save PDF to session storage for preview using FileReader
         const base64 = await new Promise<string>((resolve) => {
           const reader = new FileReader()
           reader.onload = () => {
             const result = reader.result as string
-            // Remove data:application/pdf;base64, prefix
             resolve(result.split(',')[1])
           }
           reader.readAsDataURL(file)
         })
         sessionStorage.setItem('uploaded-pdf', base64)
 
-        // Show loading toast
         toast.message('Uploading and analyzing your CV...', {
           description: 'This may take a few seconds',
         })

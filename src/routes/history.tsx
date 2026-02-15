@@ -27,7 +27,6 @@ function HistoryPage() {
   const [reviews, setReviews] = useState<ReviewData[]>([])
 
   useEffect(() => {
-    // Get all reviews from localStorage
     const allReviews: ReviewData[] = []
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
@@ -38,7 +37,6 @@ function HistoryPage() {
         }
       }
     }
-    // Sort by createdAt descending
     allReviews.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     setReviews(allReviews)
   }, [])
