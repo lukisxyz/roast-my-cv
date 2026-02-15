@@ -13,6 +13,7 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CvReviewIdRouteImport } from './routes/cv-review.$id'
 import { Route as ApiReviewCvRouteImport } from './routes/api/review-cv'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
@@ -34,16 +35,23 @@ const ApiReviewCvRoute = ApiReviewCvRouteImport.update({
   path: '/api/review-cv',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/review-cv': typeof ApiReviewCvRoute
   '/cv-review/$id': typeof CvReviewIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/review-cv': typeof ApiReviewCvRoute
   '/cv-review/$id': typeof CvReviewIdRoute
 }
@@ -51,20 +59,33 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/review-cv': typeof ApiReviewCvRoute
   '/cv-review/$id': typeof CvReviewIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/history' | '/api/review-cv' | '/cv-review/$id'
+  fullPaths:
+    | '/'
+    | '/history'
+    | '/api/health'
+    | '/api/review-cv'
+    | '/cv-review/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/history' | '/api/review-cv' | '/cv-review/$id'
-  id: '__root__' | '/' | '/history' | '/api/review-cv' | '/cv-review/$id'
+  to: '/' | '/history' | '/api/health' | '/api/review-cv' | '/cv-review/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/history'
+    | '/api/health'
+    | '/api/review-cv'
+    | '/cv-review/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoryRoute: typeof HistoryRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiReviewCvRoute: typeof ApiReviewCvRoute
   CvReviewIdRoute: typeof CvReviewIdRoute
 }
@@ -99,12 +120,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReviewCvRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoryRoute: HistoryRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiReviewCvRoute: ApiReviewCvRoute,
   CvReviewIdRoute: CvReviewIdRoute,
 }

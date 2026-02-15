@@ -1,4 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { STXtoMicroSTX, createPaymentMiddleware } from '@/lib/payment'
+
+// Payment amount: 2 STX
+const PAYMENT_AMOUNT = STXtoMicroSTX(2)
+
+// Create payment middleware for CV review endpoint
+const handlePayment = createPaymentMiddleware({
+  amount: PAYMENT_AMOUNT,
+  description: 'CV Review Service - Get AI-powered resume feedback',
+})
 
 if (typeof globalThis.DOMMatrix === 'undefined') {
   globalThis.DOMMatrix = class DOMMatrix {
@@ -60,8 +70,34 @@ export const Route = createFileRoute('/api/review-cv')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const formData = await request.formData()
+        const isDemo = formData.get('demo') === 'true'
+
+        // Check payment first (skip for demo mode)
+        let payment = null
+        if (!isDemo) {
+          const paymentResult = await handlePayment(request)
+
+          if (paymentResult.requiresPayment) {
+            return Response.json(
+              {
+                error: 'Payment required',
+                paymentRequired: paymentResult.paymentRequired,
+              },
+              {
+                status: 402,
+                headers: {
+                  'payment-required': paymentResult.paymentRequiredHeader!,
+                },
+              }
+            )
+          }
+
+          // Payment verified - attach payment info to request context
+          payment = paymentResult.payment
+        }
+
         try {
-          const formData = await request.formData()
           const file = formData.get('file')
 
           if (!file || !(file instanceof File)) {
@@ -201,11 +237,18 @@ Provide your review in this JSON format:
             }
           }
 
-          return Response.json({
+          const response: Record<string, any> = {
             success: true,
             filename: file.name,
-            review
-          })
+            review,
+          }
+
+          // Include payment info if available
+          if (payment) {
+            response.payment = payment
+          }
+
+          return Response.json(response)
 
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error)
