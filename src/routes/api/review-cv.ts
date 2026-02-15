@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { PDFParse } from 'pdf-parse'
 
 export const Route = createFileRoute('/api/review-cv')({
   server: {
@@ -27,6 +26,9 @@ export const Route = createFileRoute('/api/review-cv')({
           // Read file as buffer
           const arrayBuffer = await file.arrayBuffer()
           const buffer = Buffer.from(arrayBuffer)
+
+          // Dynamic import to avoid SSR issues with pdf-parse's dependency on pdfjs-dist
+          const { PDFParse } = await import('pdf-parse')
 
           // Parse PDF
           const parser = new PDFParse({ data: buffer })
