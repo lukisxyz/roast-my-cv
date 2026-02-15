@@ -44,16 +44,16 @@ function HistoryPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="w-full px-4 py-6 border-b">
-        <nav className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/' })}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+      <header className="w-full px-2 md:px-4 py-3 md:py-6 border-b">
+        <nav className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 md:gap-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/' })} className="px-2 md:px-3">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline md:ml-2">Back</span>
             </Button>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <span className="text-xl font-black tracking-tight">Roastmycv</span>
+              <Sparkles className="w-5 h-5 text-primary shrink-0" />
+              <span className="text-xl font-black tracking-tight hidden sm:block">Roastmycv</span>
             </div>
           </div>
         </nav>

@@ -176,19 +176,19 @@ function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="w-full px-4 py-6">
-        <nav className="flex items-center justify-between">
+      <header className="w-full px-4 py-4 md:py-6">
+        <nav className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-black tracking-tight">Roastmycv</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             {walletAddress ? (
               <Button variant="outline" size="sm" onClick={() => { getDisconnect(); setWalletAddress(null) }}>
                 <Wallet className="w-4 h-4 mr-2" />
-                {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                <span className="hidden sm:inline">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
               </Button>
             ) : (
               <Button
@@ -198,12 +198,13 @@ function HomePage() {
                 disabled={walletLoading}
               >
                 <Wallet className="w-4 h-4 mr-2" />
-                {walletLoading ? 'Connecting...' : 'Connect Wallet'}
+                <span className="hidden sm:inline">{walletLoading ? 'Connecting...' : 'Connect Wallet'}</span>
+                <span className="sm:hidden">Connect</span>
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/history' })}>
               <History className="w-4 h-4 mr-2" />
-              History
+              <span className="hidden md:inline">History</span>
             </Button>
           </div>
         </nav>
