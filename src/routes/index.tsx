@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
 import { FileText, Zap, Sparkles, ArrowRight, History, Wallet } from 'lucide-react'
 import { toast } from 'sonner'
-import { uploadCV, getWalletAddress, getIsConnected, getDisconnect, getStoredAddress } from '@/lib/usePayment'
+import { getStoredAddress } from '@/lib/usePayment'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -35,6 +35,7 @@ function HomePage() {
       fileRef.current = file
       const addr = walletAddress || getStoredAddress()
       const paymentReq = pendingPayment?.paymentRequirements
+      const { uploadCV } = await import('@/lib/usePayment')
       return uploadCV(file, { walletAddress: addr || undefined, paymentRequirements: paymentReq })
     },
     onSuccess: (data) => {
@@ -104,6 +105,7 @@ function HomePage() {
   const handleConnectWallet = async () => {
     setWalletLoading(true)
     try {
+      const { getWalletAddress } = await import('@/lib/usePayment')
       const address = await getWalletAddress()
       setWalletAddress(address)
 
@@ -186,7 +188,7 @@ function HomePage() {
           </div>
           <div className="flex items-center gap-1 md:gap-2">
             {walletAddress ? (
-              <Button variant="outline" size="sm" onClick={() => { getDisconnect(); setWalletAddress(null) }}>
+              <Button variant="outline" size="sm" onClick={async () => { const { getDisconnect } = await import('@/lib/usePayment'); getDisconnect(); setWalletAddress(null) }}>
                 <Wallet className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
               </Button>

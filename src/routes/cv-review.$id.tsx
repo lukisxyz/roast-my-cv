@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Sparkles, ArrowLeft, Save, CheckCircle } from 'lucide-react'
+import { Sparkles, ArrowLeft, Save, CheckCircle, History } from 'lucide-react'
 
 interface ReviewData {
   id: string
